@@ -41,5 +41,5 @@ int main(int argc, char* argv[])
         cout << "Invalid parameters" << endl;
         flag = 0;
     }
-
+    return 0;
 }
