@@ -74,7 +74,27 @@ int main(int argc, char* argv[])
     else if (argc == 5)
     {
         // four extra parameters, might be client mode
-        // Ignored for now
+        int i = 1;
+        while (i <= 4)
+        {
+            if (strcmp(argv[i],"-p") == 0)
+            {
+                // If is -p, next argument should be port number
+                string portnum = argv[++i]; // Assign CString port number to string
+                port = parseportnum(portnum);
+                if (port  == -2)
+                {
+                    // Determined invalid port number by parseportnum
+                    cout << "Invalid Port Number" << endl;
+                    flag = 1;
+                    break;
+                }
+                i++;
+            }
+            // Determine whether it is "-s"
+            // Else determine invalid flag, print error message, then flag = 1
+        }
+        // Determine whether port number and ip address are both provided, else print error message, then flag = 1
     }
     else
     {
