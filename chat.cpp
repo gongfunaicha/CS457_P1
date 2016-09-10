@@ -6,6 +6,47 @@
 
 using namespace std;
 
+int parseportnum(string portnum)
+{
+    if (portnum.length() > 5)
+    {
+        // Shouldn't be larger than 99999
+        return -2;
+    }
+    if (portnum.length() == 0)
+    {
+        // Portnum shouldn't be empty
+        return -2;
+    }
+    for (unsigned int i = 0; i < portnum.length(); i++)
+    {
+        if ((portnum[i] < '0') or (portnum[i] > '9'))
+        {
+            // element must be a number
+            return -2;
+        }
+    }
+    if ((portnum[0] == '0') && (portnum.length() != 1))
+    {
+        // Portnum shouldn't start with zero
+        return -2;
+    }
+    // Start to parse the portnum
+    int port = 0;
+    for (unsigned int i = 0; i < portnum.length(); i++)
+    {
+        port *= 10;
+        port += (portnum[i] - '0');
+    }
+    if ((port < 0) || (port > 65535))
+    {
+        // Portnum must be in the correct range (0~65535)
+        return -2;
+    }
+    return port;
+}
+
+
 int main(int argc, char* argv[])
 {
     // flag is used for differentiate different outcome
