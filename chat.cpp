@@ -46,14 +46,87 @@ int parseportnum(string portnum)
     return port;
 }
 
+string tolower(string src)
+{
+    // Helper function that converts a string to lowercase
+    string res = "";
+    unsigned int len_src = src.length();
+    for (unsigned int i = 0; i < len_src;i++)
+    {
+        if ((src[i] >= 'A') && (src[i] <= 'Z'))
+            res += (src[i] + 'a' - 'A');
+        else
+            res += src[i];
+    }
+    return res;
+}
+
+string checkip(string ip)
+{
+    unsigned int len_ip = ip.length();
+    unsigned int subaddr = 0; // Used to store the subpart of addr, should be within 0 ~ 255
+    unsigned int dotcount = 0; // Used to count the number of dots in ip
+    if (tolower(ip) == "localhost")
+    {
+        // Special case for localhost
+        return "localhost";
+    }
+    for (unsigned int i = 0; i < len_ip; i++)
+    {
+        // Every character must be '0~9' or '.'
+        if ((ip[i] >= '0') && (ip[i] <= '9'))
+        {
+            if ((subaddr == 0) && (ip[i] == '0') && ((i+1) < len_ip) && (ip[i+1] != '.'))
+            {
+                // First character of the sub addr shouldn't be 0 except for only '0'
+                return "InvalidIP";
+            }
+            subaddr *= 10;
+            subaddr += (ip[i] - '0');
+        }
+        else if (ip[i] == '.')
+        {
+            dotcount++;
+            if ((i == 0) || (ip[i-1] == '.')|| ((i+1) == len_ip))
+            {
+                // If dot is at first, last, or two consecutive dots, return Invalid IP
+                return "InvalidIP";
+            }
+            if (subaddr > 255)
+            {
+                // Subaddr should be within 0 and 255
+                return "InvalidIP";
+            }
+            subaddr = 0; // Next subaddr should start, clear the subaddr
+        }
+        else
+        {
+            // Neither 0 ~ 9  nor '.', return Invalid IP
+            return "InvalidIP";
+        }
+    }
+    // If survives, check the number of dots and last subaddr value
+    if (dotcount != 3)
+    {
+        // Must be 3 dots in the ip string
+        return "InvalidIP";
+    }
+    if (subaddr > 255)
+    {
+        // Subaddr should be within 0 and 255
+        return "InvalidIP";
+    }
+    // All good, return ip
+    return ip;
+}
 
 int main(int argc, char* argv[])
 {
     // flag is used for differentiate different outcome
     // 0 = print help message, 1 = start server, 2 = start client
-    int flag = 0;
+    int flag = 1;
     // two variables below are used in client mode
-    string ip = "noinput"; // "noinput" for no input
+    string ip = "NoInput"; // "NoInput" for no input
     int port = -1; // -1 for no input
     if (argc == 1)
     {
@@ -86,15 +159,45 @@ int main(int argc, char* argv[])
                 {
                     // Determined invalid port number by parseportnum
                     cout << "Invalid Port Number" << endl;
-                    flag = 1;
+                    flag = 0;
                     break;
                 }
                 i++;
             }
-            // Determine whether it is "-s"
-            // Else determine invalid flag, print error message, then flag = 1
+            else if (strcmp(argv[i],"-s") == 0)
+            {
+                // If is -s, next argument should be ip address
+                string ipaux = argv[++i]; // Assign CString ip addr to string
+                ip = checkip(ipaux);
+                if (ip == "InvalidIP")
+                {
+                    // Determined invalid ip by checkip
+                    cout << "Inavlid IP" << endl;
+                    flag = 0;
+                    break;
+                }
+                i++;
+            }
+            else
+            {
+                // Got invalid flag
+                cout << "Invalid Flag Received" << endl;
+                flag = 0;
+                break;
+            }
         }
-        // Determine whether port number and ip address are both provided, else print error message, then flag = 1
+        // Out of loop, check whether both port and ip received
+        if ((port == -1) || (ip == "NoInput"))
+        {
+            // Either port not received or ip not received
+            cout << "Both port and ip must be correctly provided." << endl;
+            flag = 0;
+        }
+        else if (flag != 0)
+        {
+            // All good.
+            flag = 2;
+        }
     }
     else
     {
@@ -102,5 +205,7 @@ int main(int argc, char* argv[])
         cout << "Invalid parameters" << endl;
         flag = 0;
     }
+
+
     return 0;
 }
