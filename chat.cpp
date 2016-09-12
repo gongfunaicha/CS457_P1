@@ -206,6 +206,28 @@ int main(int argc, char* argv[])
         flag = 0;
     }
 
+    // Start to handle different flag cases
+    if (flag == 0)
+    {
+        // Flag == 0, display help message
+        cout << "Usage: ./chat [OPTION...]" << endl;
+        cout << "  -s=SERVER_IP\tSpecify the IP of the server to connect" << endl;
+        cout << "  -p=Port_Num\tSpecify the port number of the server" << endl;
+        cout << "  -h\t\tDisplay this help message" << endl;
+        cout << endl;
+        cout << "To start a server, simply type ./chat" << endl;
+        cout << endl;
+        cout << "To start a client, you must use both -s and -p flags" << endl;
+        cout << "  For example, ./chat -s 127.0.0.1 -p 8888" << endl;
+    }
+    else if (flag == 1)
+    {
+        // Flag == 1, start server
+    }
+    else
+    {
+        // Flag == 2, start client
+    }
 
     return 0;
 }
