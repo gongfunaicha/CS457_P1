@@ -445,6 +445,58 @@ int main(int argc, char* argv[])
     else
     {
         // Flag == 2, start client
+
+        // Start creating socket
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd == -1)
+        {
+            // Failed to get file descriptor
+            cout << "Error: Failed to get socket/file descriptor. Program will now terminate." << endl;
+            self_exit(sockfd, 1);
+        }
+
+        cout << "Connecting to server... ";
+
+        // Create struct sockaddr_in
+        struct sockaddr_in server_address;
+        memset(&server_address,0,sizeof(server_address)); // Initialize localAddress (with all zero)
+
+        // Prepare the IP
+        inet_pton(AF_INET, ip.c_str(), &(server_address.sin_addr));
+
+        // Prepare the port number
+        uint16_t portnumber = (uint16_t) port; // port should be between 0 and 65535, so conversion is safe
+        uint16_t network_portnumber = htons(portnumber); // Convert port number into network byte order
+
+        // Prepare the struct sockaddr_in
+        server_address.sin_family = AF_INET;
+        server_address.sin_port = network_portnumber;
+
+        // Start to connect
+        int ret = connect(sockfd, (struct sockaddr*)&server_address, sizeof(server_address));
+
+        if (ret == -1)
+        {
+            cout << "Error: Failed to connect. Program will now terminate." << endl;
+            self_exit(sockfd, 1);
+        }
+
+        char recv_buffer[RECVBUFLENGTH];
+        char decode_buffer[DECODEBUFLENGTH];
+        char input_buffer[INPUTBUFLENGTH];
+        char encode_buffer[ENCODEBUFLENGTH];
+
+        while (1)
+        {
+            // Loop until got interrupt signal
+
+            // First send
+            send(sockfd, input_buffer, encode_buffer);
+
+            // Next receive
+            receive(sockfd, recv_buffer, decode_buffer);
+
+        }
     }
 
     return 0;
