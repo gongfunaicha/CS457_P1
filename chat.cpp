@@ -11,10 +11,10 @@
 #include <arpa/inet.h>
 
 #define SERVERPORT 60000 // Server port should be between 0 and 65535
-#define RECVBUFLENGTH 145
+#define RECVBUFLENGTH 1000
 #define DECODEBUFLENGTH 141
 #define INPUTBUFLENGTH 141
-#define ENCODEBUFLENGTH 145
+#define ENCODEBUFLENGTH 144
 
 using namespace std;
 
@@ -153,7 +153,7 @@ int decode_message(char* msg_received, char* decode_buffer)
     memcpy(&version_num, msg_received, 2);
     if (version_num != 457)
     {
-        cout << "Recevied invalid version number. Program will now terminate." << endl;
+        cout << "Error: Recevied invalid version number. Program will now terminate." << endl;
         return -1;
     }
 
@@ -162,7 +162,7 @@ int decode_message(char* msg_received, char* decode_buffer)
     memcpy(&length, msg_received+2, 2);
     if (length == 0 || length > 140)
     {
-        cout << "Invalid length received. Program will now terminate." << endl;
+        cout << "Error: Invalid length received. Program will now terminate." << endl;
         return -1;
     }
 
@@ -173,6 +173,21 @@ int decode_message(char* msg_received, char* decode_buffer)
     return 0;
 }
 
+void encode_message(char* input_buffer, char* encode_buffer)
+{
+    uint16_t version_num = 457;
+    uint16_t length = strlen(input_buffer);
+
+    // First put version into encode_buffer
+    memcpy(encode_buffer, &version_num, 2);
+
+    // Next copy length into
+    memcpy(encode_buffer + 2, &length, 2);
+
+    // Last copy actual message, excluding the terminating 0
+    memcpy(encode_buffer + 4, input_buffer, length);
+}
+
 void receive(int sockfd, char* recv_buffer, char* decode_buffer)
 {
     memset(recv_buffer, 0, RECVBUFLENGTH);
@@ -180,7 +195,7 @@ void receive(int sockfd, char* recv_buffer, char* decode_buffer)
     int ret = recv(sockfd, recv_buffer, RECVBUFLENGTH, 0);
     if (ret == -1)
     {
-        cout << "Failed to receive message from client. Program will now terminate." << endl;
+        cout << "Error: Failed to receive message. Program will now terminate." << endl;
         self_exit(sockfd, 1);
     }
 
@@ -189,6 +204,40 @@ void receive(int sockfd, char* recv_buffer, char* decode_buffer)
         self_exit(sockfd, 1);
 
     cout << "Friend: " << decode_buffer << endl;
+}
+
+void send(int sockfd, char* input_buffer, char* encode_buffer)
+{
+    string temp_input_buffer;
+    memset(input_buffer, 0, INPUTBUFLENGTH);
+    memset(encode_buffer, 0, ENCODEBUFLENGTH);
+
+    // Populate the input_buffer from user input
+    while (1)
+    {
+        cout << "You: ";
+        getline(cin,temp_input_buffer);
+        temp_input_buffer.pop_back(); // Remove last character (newline)
+        if (temp_input_buffer.length() > 140)
+            cout << "Error: Input too long." << endl;
+        else
+        {
+            // temp_input_buffer must be no bigger than 140, so input_buffer is safe
+            strcpy(input_buffer,temp_input_buffer.c_str());
+            break;
+        }
+    }
+
+    // Encode the outgoing message
+    encode_message(input_buffer, encode_buffer);
+
+    // Send out the message
+    int ret = send(sockfd, encode_buffer, ENCODEBUFLENGTH, 0);
+    if (ret == -1)
+    {
+        cout <<"Error: Failed to send message. Program will now terminate.";
+        self_exit(sockfd, 1);
+    }
 }
 
 int main(int argc, char* argv[])
@@ -378,23 +427,20 @@ int main(int argc, char* argv[])
 
         char recv_buffer[RECVBUFLENGTH];
         char decode_buffer[DECODEBUFLENGTH];
-        string temp_input_buffer; // Used to test the length of the input
         char input_buffer[INPUTBUFLENGTH];
-        char encode_buffer[ENCODEBUFLENGTH]
+        char encode_buffer[ENCODEBUFLENGTH];
 
         while (1)
         {
             // Loop until got interrupt signal
 
             // First receive
-            receive(sockfd, recv_buffer, decode_buffer)
+            receive(sockfd, recv_buffer, decode_buffer);
 
             // Next send
-
+            send(sockfd, input_buffer, encode_buffer);
 
         }
-
-        close(sockfd);
     }
     else
     {
