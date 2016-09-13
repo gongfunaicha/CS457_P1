@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
         cout << "To start a server, simply type ./chat" << endl;
         cout << endl;
         cout << "To start a client, you must use both -s and -p flags" << endl;
-        cout << "  For example, ./chat -s 127.0.0.1 -p 8888" << endl;
+        cout << "  For example, ./chat -s 127.0.0.1 -p 60000" << endl;
     }
     else if (flag == 1)
     {
