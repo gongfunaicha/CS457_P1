@@ -11,6 +11,10 @@
 #include <arpa/inet.h>
 
 #define SERVERPORT 60000 // Server port should be between 0 and 65535
+#define RECVBUFLENGTH 145
+#define DECODEBUFLENGTH 141
+#define INPUTBUFLENGTH 141
+#define ENCODEBUFLENGTH 145
 
 using namespace std;
 
@@ -165,6 +169,8 @@ int decode_message(char* msg_received, char* decode_buffer)
     // Last decode the message
     memcpy(decode_buffer, msg_received+4, length);
     decode_buffer[length] = '\0'; // Terminate the string with 0 for security
+
+    return 0;
 }
 
 int main(int argc, char* argv[])
@@ -351,6 +357,34 @@ int main(int argc, char* argv[])
 
         // Send message that a connection has been accepted
         cout << "Found a friend! You receive first." << endl;
+
+        char recv_buffer[RECVBUFLENGTH];
+        char decode_buffer[DECODEBUFLENGTH];
+
+        //while (1)
+        {
+            // Loop until got interrupt signal
+
+            // First receive
+            memset(recv_buffer, 0, RECVBUFLENGTH);
+            memset(decode_buffer, 0, DECODEBUFLENGTH);
+            ret = recv(sockfd, recv_buffer, RECVBUFLENGTH, 0);
+            if (ret == -1)
+            {
+                cout << "Failed to receive message from client. Program will now terminate." << endl;
+                self_exit(sockfd, 1);
+            }
+
+            ret = decode_message(recv_buffer, decode_buffer);
+            if (ret != 0)
+                self_exit(sockfd, 1);
+
+            cout << "Friend: " << decode_buffer << endl;
+
+            // Next send
+
+
+        }
 
         close(sockfd);
     }
