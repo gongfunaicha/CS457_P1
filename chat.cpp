@@ -14,6 +14,16 @@
 
 using namespace std;
 
+void self_exit(int sockfd, int exitcode)
+{
+    if (sockfd != -1)
+    {
+        // Need to close sockfd
+        close(sockfd);
+    }
+    exit(exitcode);
+}
+
 int parseportnum(string portnum)
 {
     if (portnum.length() > 5)
@@ -241,7 +251,7 @@ int main(int argc, char* argv[])
         {
             // Failed to get file descriptor
             cout << "Error: Failed to get socket/file descriptor. Program will now terminate." << endl;
-            exit(1);
+            self_exit(sockfd, 1);
         }
 
         // Start to get host machine IP address
@@ -252,7 +262,7 @@ int main(int argc, char* argv[])
         {
             // Failed to get the hostname, abnormal return code received.
             cout << "Error: Could not successfully get hostname. Program will now terminate." << endl;
-            exit(1);
+            self_exit(sockfd, 1);
         }
         struct hostent* hostip;
         hostip = gethostbyname(hostname);
@@ -264,7 +274,7 @@ int main(int argc, char* argv[])
         {
             // Got abnormal return value (NULL), throw error
             cout << "Error: Failed to get host ip address. Program will now terminate." << endl;
-            exit(1);
+            self_exit(sockfd, 1);
         }
 
         // Prepare the port number
@@ -284,7 +294,7 @@ int main(int argc, char* argv[])
         {
             // Failed to bind
             cout << "Error: Failed to bind. Program will now terminate." << endl;
-            exit(1);
+            self_exit(sockfd, 1);
         }
 
         // Start listening
@@ -293,7 +303,7 @@ int main(int argc, char* argv[])
         {
             // Failed to listen
             cout << "Error: Failed to listen. Program will now terminate." << endl;
-            exit(1);
+            self_exit(sockfd, 1);
         }
 
         // Prepare to start waiting for connection
@@ -307,7 +317,7 @@ int main(int argc, char* argv[])
         {
             // Failed to accept connection
             cout << "Error: Failed to accept connection. Program will now terminate." << endl;
-            exit(1);
+            self_exit(sockfd, 1);
         }
 
         // Send message that a connection has been accepted
