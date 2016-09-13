@@ -165,7 +165,7 @@ int decode_message(char* msg_received, char* decode_buffer)
     // Next decode the length
     uint16_t length = 0;
     memcpy(&length, msg_received+2, 2);
-    if (length == 0 || length > 140)
+    if (length < 0 || length > 140)
     {
         cout << "Error: Invalid length received. Program will now terminate." << endl;
         return -1;
@@ -226,6 +226,8 @@ void send(int sockfd, char* input_buffer, char* encode_buffer)
         //temp_input_buffer.pop_back(); // Remove last character (newline)
         if (temp_input_buffer.length() > 140)
             cout << "Error: Input too long." << endl;
+        else if (temp_input_buffer.length() == 0)
+            cout << "Error: Input too short. At least say something." << endl;
         else
         {
             // temp_input_buffer must be no bigger than 140, so input_buffer is safe
