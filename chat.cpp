@@ -138,6 +138,35 @@ string checkip(string ip)
     return ip;
 }
 
+int decode_message(char* msg_received, char* decode_buffer)
+{
+    // This function is used to decode the message received
+    // msg_received is a char array that store the received message, this array should have at least 145 byte capacity
+    // in_buffer is a empty char array ready to store the decoded message, should at least have 141 byte capacity
+
+    // First decode the version number
+    uint16_t version_num = 0;
+    memcpy(&version_num, msg_received, 2);
+    if (version_num != 457)
+    {
+        cout << "Recevied invalid version number. Program will now terminate." << endl;
+        return -1;
+    }
+
+    // Next decode the length
+    uint16_t length = 0;
+    memcpy(&length, msg_received+2, 2);
+    if (length == 0 || length > 140)
+    {
+        cout << "Invalid length received. Program will now terminate." << endl;
+        return -1;
+    }
+
+    // Last decode the message
+    memcpy(decode_buffer, msg_received+4, length);
+    decode_buffer[length] = '\0'; // Terminate the string with 0 for security
+}
+
 int main(int argc, char* argv[])
 {
     // flag is used for differentiate different outcome
