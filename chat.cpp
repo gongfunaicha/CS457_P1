@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
         if (sockfd == -1)
         {
             // Failed to get file descriptor
-            cout << "Error: Failed to get socket/file descriptor." << endl;
+            cout << "Error: Failed to get socket/file descriptor. Program will now terminate." << endl;
             exit(1);
         }
 
@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
         if (ret != 0)
         {
             // Failed to get the hostname, abnormal return code received.
-            cout << "Could not successfully get hostname." << endl;
+            cout << "Error: Could not successfully get hostname. Program will now terminate." << endl;
             exit(1);
         }
         struct hostent* hostip;
@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
         if (inet_ntop(AF_INET, ptr_binary_ip_addr, ipaddr, INET_ADDRSTRLEN) == NULL)
         {
             // Got abnormal return value (NULL), throw error
-            cout << "Failed to get host ip address." << endl;
+            cout << "Error: Failed to get host ip address. Program will now terminate." << endl;
             exit(1);
         }
 
@@ -274,14 +274,14 @@ int main(int argc, char* argv[])
         memset(&localAddress,0,sizeof(localAddress)); // Initialize localAddress (with all zero)
         localAddress.sin_family = AF_INET;
         localAddress.sin_port = network_portnumber;
-        localAddress.sin_addr = *ptr_binary_ip_addr;
+        localAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 
         // Start binding
         ret = bind(sockfd, (struct sockaddr*)&localAddress, sizeof(localAddress));
         if (ret == -1)
         {
             // Failed to bind
-            cout << "Failed to bind." << endl;
+            cout << "Error: Failed to bind. Program will now terminate." << endl;
             exit(1);
         }
 
@@ -290,14 +290,28 @@ int main(int argc, char* argv[])
         if (ret == -1)
         {
             // Failed to listen
-            cout << "Failed to listen." << endl;
+            cout << "Error: Failed to listen. Program will now terminate." << endl;
             exit(1);
         }
 
         // Prepare to start waiting for connection
         cout << "Waiting for a connection on " << ipaddr << " port " << portnumber <<endl;
 
+        // Start accepting connection
+        struct sockaddr_storage peeraddr; // Used to store peer address infomation by accept
+        socklen_t lenpeeraddr;
+        ret = accept(sockfd, (sockaddr*)&peeraddr, &lenpeeraddr);
+        if (ret == -1)
+        {
+            // Failed to accept connection
+            cout << "Error: Failed to accept connection. Program will now terminate." << endl;
+            exit(1);
+        }
 
+        // Send message that a connection has been accepted
+        cout << "Found a friend! You receive first." << endl;
+
+        close(sockfd);
     }
     else
     {
