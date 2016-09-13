@@ -230,6 +230,10 @@ int main(int argc, char* argv[])
     else if (flag == 1)
     {
         // Flag == 1, start server
+        // Show welcome message
+        cout << "Welcome to Chat!" << endl;
+
+        // Start creating socket
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd == -1)
         {
@@ -237,6 +241,8 @@ int main(int argc, char* argv[])
             cout << "Error: Failed to get socket/file descriptor." << endl;
             exit(1);
         }
+
+        // Start to get host machine IP address
         char hostname[501];
         hostname[500] = '\0';
         int ret = gethostname(hostname, 500);
@@ -250,12 +256,47 @@ int main(int argc, char* argv[])
         hostip = gethostbyname(hostname);
         char ipaddr[INET_ADDRSTRLEN]; // Used to store the ip address we get
         ipaddr[INET_ADDRSTRLEN-1] = '\0';
-        if (inet_ntop(AF_INET, hostip->h_addr_list[0], ipaddr, INET_ADDRSTRLEN) == NULL)
+        // Used to store the pointer to the binary version of ip address
+        struct in_addr* ptr_binary_ip_addr = (in_addr*)hostip->h_addr_list[0];
+        if (inet_ntop(AF_INET, ptr_binary_ip_addr, ipaddr, INET_ADDRSTRLEN) == NULL)
         {
-            // Get abnormal return value, throw error
+            // Got abnormal return value (NULL), throw error
             cout << "Failed to get host ip address." << endl;
             exit(1);
         }
+
+        // Prepare the port number
+        uint16_t portnumber = (uint16_t) 60000; // 60000 is between 0 and 65535, so conversion is safe
+        uint16_t network_portnumber = htons(portnumber); // Convert port number into network byte order
+
+        // Prepare the struct sockaddr_in
+        struct sockaddr_in localAddress;
+        memset(&localAddress,0,sizeof(localAddress)); // Initialize localAddress (with all zero)
+        localAddress.sin_family = AF_INET;
+        localAddress.sin_port = network_portnumber;
+        localAddress.sin_addr = *ptr_binary_ip_addr;
+
+        // Start binding
+        ret = bind(sockfd, (struct sockaddr*)&localAddress, sizeof(localAddress));
+        if (ret == -1)
+        {
+            // Failed to bind
+            cout << "Failed to bind." << endl;
+            exit(1);
+        }
+
+        // Start listening
+        ret = listen(sockfd, 1);
+        if (ret == -1)
+        {
+            // Failed to listen
+            cout << "Failed to listen." << endl;
+            exit(1);
+        }
+
+        // Prepare to start waiting for connection
+        cout << "Waiting for a connection on " << ipaddr << " port " << portnumber <<endl;
+
 
     }
     else
