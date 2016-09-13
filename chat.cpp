@@ -173,6 +173,24 @@ int decode_message(char* msg_received, char* decode_buffer)
     return 0;
 }
 
+void receive(int sockfd, char* recv_buffer, char* decode_buffer)
+{
+    memset(recv_buffer, 0, RECVBUFLENGTH);
+    memset(decode_buffer, 0, DECODEBUFLENGTH);
+    int ret = recv(sockfd, recv_buffer, RECVBUFLENGTH, 0);
+    if (ret == -1)
+    {
+        cout << "Failed to receive message from client. Program will now terminate." << endl;
+        self_exit(sockfd, 1);
+    }
+
+    ret = decode_message(recv_buffer, decode_buffer);
+    if (ret != 0)
+        self_exit(sockfd, 1);
+
+    cout << "Friend: " << decode_buffer << endl;
+}
+
 int main(int argc, char* argv[])
 {
     // flag is used for differentiate different outcome
@@ -360,26 +378,16 @@ int main(int argc, char* argv[])
 
         char recv_buffer[RECVBUFLENGTH];
         char decode_buffer[DECODEBUFLENGTH];
+        string temp_input_buffer; // Used to test the length of the input
+        char input_buffer[INPUTBUFLENGTH];
+        char encode_buffer[ENCODEBUFLENGTH]
 
-        //while (1)
+        while (1)
         {
             // Loop until got interrupt signal
 
             // First receive
-            memset(recv_buffer, 0, RECVBUFLENGTH);
-            memset(decode_buffer, 0, DECODEBUFLENGTH);
-            ret = recv(sockfd, recv_buffer, RECVBUFLENGTH, 0);
-            if (ret == -1)
-            {
-                cout << "Failed to receive message from client. Program will now terminate." << endl;
-                self_exit(sockfd, 1);
-            }
-
-            ret = decode_message(recv_buffer, decode_buffer);
-            if (ret != 0)
-                self_exit(sockfd, 1);
-
-            cout << "Friend: " << decode_buffer << endl;
+            receive(sockfd, recv_buffer, decode_buffer)
 
             // Next send
 
