@@ -3,6 +3,12 @@
 //
 #include <iostream>
 #include <cstring>
+#include <cstdint>
+#include <sys/socket.h>
+#include <cstdlib>
+#include <unistd.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 using namespace std;
 
@@ -128,6 +134,7 @@ int main(int argc, char* argv[])
     // two variables below are used in client mode
     string ip = "NoInput"; // "NoInput" for no input
     int port = -1; // -1 for no input
+    int sockfd = -1; // Used to store the socket file descriptor, used for cleanup, -1 for sockfd not initialized
     if (argc == 1)
     {
         // no extra parameters, server mode
@@ -223,6 +230,33 @@ int main(int argc, char* argv[])
     else if (flag == 1)
     {
         // Flag == 1, start server
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd == -1)
+        {
+            // Failed to get file descriptor
+            cout << "Error: Failed to get socket/file descriptor." << endl;
+            exit(1);
+        }
+        char hostname[501];
+        hostname[500] = '\0';
+        int ret = gethostname(hostname, 500);
+        if (ret != 0)
+        {
+            // Failed to get the hostname, abnormal return code received.
+            cout << "Could not successfully get hostname." << endl;
+            exit(1);
+        }
+        struct hostent* hostip;
+        hostip = gethostbyname(hostname);
+        char ipaddr[INET_ADDRSTRLEN]; // Used to store the ip address we get
+        ipaddr[INET_ADDRSTRLEN-1] = '\0';
+        if (inet_ntop(AF_INET, hostip->h_addr_list[0], ipaddr, INET_ADDRSTRLEN) == NULL)
+        {
+            // Get abnormal return value, throw error
+            cout << "Failed to get host ip address." << endl;
+            exit(1);
+        }
+
     }
     else
     {
