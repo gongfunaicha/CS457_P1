@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <error.h>
+#include <csignal>
 
 #define SERVERPORT 60000 // Server port should be between 0 and 65535
 #define RECVBUFLENGTH 1000
@@ -18,7 +20,10 @@
 
 using namespace std;
 
-void self_exit(int sockfd, int exitcode)
+// Global variable
+int sockfd = -1; // Used to store the socket file descriptor, used for cleanup, -1 for sockfd not initialized
+
+void self_exit(int exitcode)
 {
     if (sockfd != -1)
     {
@@ -196,12 +201,13 @@ void receive(int sockfd, char* recv_buffer, char* decode_buffer)
     if (ret == -1)
     {
         cout << "Error: Failed to receive message. Program will now terminate." << endl;
-        self_exit(sockfd, 1);
+        cerr << "Error number: " << errno <<endl;
+        self_exit(1);
     }
 
     ret = decode_message(recv_buffer, decode_buffer);
     if (ret != 0)
-        self_exit(sockfd, 1);
+        self_exit(1);
 
     cout << "Friend: " << decode_buffer << endl;
 }
@@ -217,7 +223,7 @@ void send(int sockfd, char* input_buffer, char* encode_buffer)
     {
         cout << "You: ";
         getline(cin,temp_input_buffer);
-        temp_input_buffer.pop_back(); // Remove last character (newline)
+        //temp_input_buffer.pop_back(); // Remove last character (newline)
         if (temp_input_buffer.length() > 140)
             cout << "Error: Input too long." << endl;
         else
@@ -236,19 +242,27 @@ void send(int sockfd, char* input_buffer, char* encode_buffer)
     if (ret == -1)
     {
         cout <<"Error: Failed to send message. Program will now terminate.";
-        self_exit(sockfd, 1);
+        self_exit(1);
     }
+}
+
+void sig_handler(int signal)
+{
+    cout << "Interrupt signal received." << endl;
+    self_exit(0);
 }
 
 int main(int argc, char* argv[])
 {
+    // Connect SIGINT with sig_handler
+    signal(SIGINT,sig_handler);
+
     // flag is used for differentiate different outcome
     // 0 = print help message, 1 = start server, 2 = start client
     int flag = 1;
     // two variables below are used in client mode
     string ip = "NoInput"; // "NoInput" for no input
     int port = -1; // -1 for no input
-    int sockfd = -1; // Used to store the socket file descriptor, used for cleanup, -1 for sockfd not initialized
     if (argc == 1)
     {
         // no extra parameters, server mode
@@ -353,7 +367,7 @@ int main(int argc, char* argv[])
         {
             // Failed to get file descriptor
             cout << "Error: Failed to get socket/file descriptor. Program will now terminate." << endl;
-            self_exit(sockfd, 1);
+            self_exit(1);
         }
 
         // Start to get host machine IP address
@@ -364,7 +378,7 @@ int main(int argc, char* argv[])
         {
             // Failed to get the hostname, abnormal return code received.
             cout << "Error: Could not successfully get hostname. Program will now terminate." << endl;
-            self_exit(sockfd, 1);
+            self_exit(1);
         }
         struct hostent* hostip;
         hostip = gethostbyname(hostname);
@@ -376,7 +390,7 @@ int main(int argc, char* argv[])
         {
             // Got abnormal return value (NULL), throw error
             cout << "Error: Failed to get host ip address. Program will now terminate." << endl;
-            self_exit(sockfd, 1);
+            self_exit(1);
         }
 
         // Prepare the port number
@@ -396,7 +410,7 @@ int main(int argc, char* argv[])
         {
             // Failed to bind
             cout << "Error: Failed to bind. Program will now terminate." << endl;
-            self_exit(sockfd, 1);
+            self_exit(1);
         }
 
         // Start listening
@@ -405,7 +419,7 @@ int main(int argc, char* argv[])
         {
             // Failed to listen
             cout << "Error: Failed to listen. Program will now terminate." << endl;
-            self_exit(sockfd, 1);
+            self_exit(1);
         }
 
         // Prepare to start waiting for connection
@@ -413,14 +427,19 @@ int main(int argc, char* argv[])
 
         // Start accepting connection
         struct sockaddr_storage peeraddr; // Used to store peer address infomation by accept
-        socklen_t lenpeeraddr;
+        socklen_t lenpeeraddr = sizeof(peeraddr);
         ret = accept(sockfd, (sockaddr*)&peeraddr, &lenpeeraddr);
         if (ret == -1)
         {
             // Failed to accept connection
             cout << "Error: Failed to accept connection. Program will now terminate." << endl;
-            self_exit(sockfd, 1);
+            self_exit(1);
         }
+
+        // Client connected, stop listening
+        close(sockfd);
+        // From now on use the sockfd from the accept function
+        sockfd = ret;
 
         // Send message that a connection has been accepted
         cout << "Found a friend! You receive first." << endl;
@@ -452,7 +471,7 @@ int main(int argc, char* argv[])
         {
             // Failed to get file descriptor
             cout << "Error: Failed to get socket/file descriptor. Program will now terminate." << endl;
-            self_exit(sockfd, 1);
+            self_exit(1);
         }
 
         cout << "Connecting to server... ";
@@ -478,8 +497,11 @@ int main(int argc, char* argv[])
         if (ret == -1)
         {
             cout << "Error: Failed to connect. Program will now terminate." << endl;
-            self_exit(sockfd, 1);
+            self_exit(1);
         }
+
+        cout << "Connected!" << endl;
+        cout << "Connected to a friend! You send first." << endl;
 
         char recv_buffer[RECVBUFLENGTH];
         char decode_buffer[DECODEBUFLENGTH];
