@@ -10,6 +10,8 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
+#define SERVERPORT 60000 // Server port should be between 0 and 65535
+
 using namespace std;
 
 int parseportnum(string portnum)
@@ -266,7 +268,7 @@ int main(int argc, char* argv[])
         }
 
         // Prepare the port number
-        uint16_t portnumber = (uint16_t) 60000; // 60000 is between 0 and 65535, so conversion is safe
+        uint16_t portnumber = (uint16_t) SERVERPORT; // SERVERPORT should be between 0 and 65535, so conversion is safe
         uint16_t network_portnumber = htons(portnumber); // Convert port number into network byte order
 
         // Prepare the struct sockaddr_in
