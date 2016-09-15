@@ -1,0 +1,31 @@
+This chat.cpp is a source code of simple chat server and client.
+To compile the code, simply do "make" in the terminal under the folder of makefile and source code.
+The generated executable will be called "chat".
+
+Instruction on invoking the chat application:
+Usage: ./chat [OPTION...]
+  -s=SERVER_IP	Specify the IP of the server to connect
+  -p=Port_Num	Specify the port number of the server
+  -h		    Display help message
+
+To start a server, simply type ./chat
+
+To start a client, you must use both -s and -p flags
+  For example, ./chat -s 127.0.0.1 -p 60000
+
+
+--- Questions asked and answers ---
+Q1: Whether the version number and the length of the message should be sent in unsigned 16 bit or signed 16 bit?
+A1: unsigned.
+
+Q2: Whether the 140 characters limit includes the terminating 0 (due to the C String)?
+A2: No.
+
+Q3: Should we transmit the terminating 0 to the client/server?
+A3: You can transmit the null terminator, but you don't need to.
+
+Q4: I shouldn't make the assumption that others' program will send me the message with null terminator?
+A4: Correct.
+
+Q5: When should we use network-to-host? It is in the grading but I cannot see a scenario that I can use it in P1.
+A5: We do not need to use network-to-host in P1.
