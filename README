@@ -2,6 +2,8 @@ This chat.cpp is a source code of simple chat server and client.
 To compile the code, simply do "make" in the terminal under the folder of makefile and source code.
 The generated executable will be called "chat".
 
+The server will listen on port 60000.
+
 Instruction on invoking the chat application:
 Usage: ./chat [OPTION...]
   -s=SERVER_IP	Specify the IP of the server to connect
@@ -16,7 +18,7 @@ To start a client, you must use both -s and -p flags
 
 --- Questions asked and answers ---
 Q1: Whether the version number and the length of the message should be sent in unsigned 16 bit or signed 16 bit?
-A1: unsigned.
+A1: Unsigned.
 
 Q2: Whether the 140 characters limit includes the terminating 0 (due to the C String)?
 A2: No.
